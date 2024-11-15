@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Word Meaning Query</title>
+    <style>
+        /* 页面整体设置 */
+        body {
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            background: linear-gradient(135deg, #00f260, #0575E6); /* 霓虹色彩渐变背景 */
+            color: #333;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* 设置简约风格的容器 */
+        .container {
+            background-color: rgba(255, 255, 255, 0.1); /* 半透明卡片背景，营造呼吸感 */
+            backdrop-filter: blur(10px); /* 苹果风格的磨砂玻璃效果 */
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25); /* 现代阴影效果 */
+            border-radius: 15px;
+            padding: 40px;
+            width: 400px;
+            text-align: center;
+            color: #fff; /* 字体颜色 */
+            transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+        }
+
+        /* 鼠标悬停时的轻微动画，增加呼吸感 */
+        .container:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 36px rgba(0, 0, 0, 0.35);
+        }
+
+        /* 标题样式，简约优雅 */
+        h2 {
+            font-size: 28px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            color: #fff;
+        }
+
+        /* 输入框样式 */
+        input[type="text"] {
+            width: 100%;
+            padding: 12px;
+            border-radius: 25px;
+            border: 1px solid rgba(255, 255, 255, 0.3); /* 苹果风格的边框 */
+            background-color: rgba(255, 255, 255, 0.2); /* 半透明输入框背景 */
+            color: #fff;
+            outline: none;
+            margin-bottom: 20px;
+            font-size: 16px;
+            transition: all 0.3s ease-in-out;
+        }
+
+        /* 输入框获得焦点时 */
+        input[type="text"]:focus {
+            background-color: rgba(255, 255, 255, 0.4); /* 焦点时稍微变亮 */
+            border-color: #00f260; /* 霓虹色边框 */
+        }
+
+        /* 按钮样式 */
+        button {
+            width: 100%;
+            padding: 12px;
+            background-color: #00f260; /* 霓虹色彩 */
+            border: none;
+            border-radius: 25px;
+            font-size: 16px;
+            color: #fff;
+            cursor: pointer;
+            transition: background-color 0.3s ease-in-out;
+            margin-bottom: 10px; /* 添加一些间距 */
+        }
+
+        /* 鼠标悬停按钮时 */
+        button:hover {
+            background-color: #0575E6; /* 霓虹色变化 */
+        }
+
+        /* 进度条容器 */
+        #progressBar {
+            width: 100%;
+            background-color: rgba(255, 255, 255, 0.2); /* 半透明背景 */
+            border-radius: 25px;
+            overflow: hidden;
+            height: 20px;
+            margin-bottom: 20px;
+        }
+
+        /* 进度条填充部分 */
+        #progressFill {
+            height: 100%;
+            width: 0;
+            background: linear-gradient(135deg, #00f260, #0575E6); /* 霓虹色彩渐变 */
+            transition: width 0.3s ease-in-out;
+        }
+
+        /* 结果区域样式 */
+        #result {
+            height: 150px;
+            overflow-y: auto; /* 可滑动 */
+            margin-top: 20px;
+            padding: 10px;
+            background-color: rgba(255, 255, 255, 0.2); /* 半透明背景 */
+            border-radius: 10px;
+        }
+
+        /* 结果文本 */
+        #result p {
+            font-size: 18px;
+            margin: 10px 0;
+            color: #fff;
+        }
+
+        /* 响应式设计，适配不同屏幕 */
+        @media (max-width: 480px) {
+            .container {
+                width: 90%;
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Word Meaning Query Tool</h2>
+    <input type="text" id="wordInput" placeholder="Enter words " style="width: 300px;">
+    <button id="submit">Query</button>
+    <button id="donate">打赏</button> <!-- 新增打赏按钮 -->
+
+    <div id="progressBar">
+        <div id="progressFill"></div>
+    </div>
+
+    <div id="result"></div>
+</div>
+
+<script>
+document.getElementById('submit').addEventListener('click', async () => {
+    const words = document.getElementById('wordInput').value.trim();
+    if (!words) {
+        alert('请输入至少一个单词');
+        return;
+    }
+
+    const wordList = words.split(/\s+/);  
+    const apiKey = 'sk-1qXYdonMoHbZbGkmD5B13514Fb484315901a0a149002A7Af';  
+    const url = 'https://translate.jayogo.com/v1/chat/completions';
+    const progressBarFill = document.getElementById('progressFill');
+    const resultContainer = document.getElementById('result');
+
+    resultContainer.innerHTML = '';
+
+    for (let i = 0; i < wordList.length; i++) {
+        const word = wordList[i];
+
+      const data = {
+    model: "gemini-1.5-pro-latest",
+    messages: [
+        { role: "system", content: "请根据输入内容执行相应操作。如果输入是中文，请翻译成英文（5个）；如果输入是单词，请提供其所有的中文含义，不需要具体解释。" },
+        { 
+            role: "user", 
+            content: `${word}` 
+        }
+    ]
+};
+
+
+        try {
+            progressBarFill.style.width = `${((i + 1) / wordList.length) * 100}%`;
+
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${apiKey}`
+                },
+                body: JSON.stringify(data)
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! 状态: ${response.status}`);
+            }
+
+            const result = await response.json();
+            const output = result.choices[0].message.content.trim();
+            const newResult = document.createElement('p');
+
+            // 添加发音按钮
+            const audioButton = document.createElement('button');
+            audioButton.textContent = '发音';
+            audioButton.style.marginLeft = '10px';
+            audioButton.addEventListener('click', () => {
+                // 创建音频对象播放有道词典发音
+                const audio = new Audio(`http://dict.youdao.com/dictvoice?audio=${encodeURIComponent(word)}`);
+                audio.play().catch(err => {
+                    console.error('播放音频失败:', err);
+                });
+            });
+
+            newResult.innerHTML = `<strong>${i + 1}. ${word}:</strong> ${output}`;
+            newResult.appendChild(audioButton);
+            resultContainer.appendChild(newResult);
+
+        } catch (error) {
+            const errorResult = document.createElement('p');
+            errorResult.textContent = `查询时发生错误: ${error.message}`;
+            resultContainer.appendChild(errorResult);
+        }
+    }
+});
+
+
+// 打赏按钮事件
+document.getElementById('donate').addEventListener('click', () => {
+    window.open('donate.html', '_blank'); // 打开新页面
+});
+</script>
+
+</body>
+</html>
